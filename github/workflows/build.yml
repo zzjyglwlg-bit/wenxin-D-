@@ -1,0 +1,38 @@
+name: "发布桌面端"
+on:
+  push:
+    branches:
+      - main  # 当你向 main 分支推送代码时触发
+
+jobs:
+  publish:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest] # 仅编译 Windows 版
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 构建并在 GitHub Release 发布
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__ # 会自动读取 package.json 里的版本号
+          releaseName: "国史科举 v__VERSION__"
+          releaseBody: "由 GitHub Actions 自动构建"
+          releaseDraft: true
+          prerelease: false
